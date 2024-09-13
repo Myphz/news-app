@@ -4,6 +4,12 @@ import Parser from "rss-parser";
 
 const rssParser = new Parser();
 
+export type Article = Partial<{
+  title: string;
+  link: string;
+  date: string;
+}>;
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("query");
@@ -23,7 +29,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     // Fetch and parse the RSS feed
     const feed = await rssParser.parseURL(rssUrl);
 
-    const articles = feed.items.map((item) => ({
+    const articles: Article[] = feed.items.map((item) => ({
       title: item.title,
       link: item.link,
       date: item.pubDate,

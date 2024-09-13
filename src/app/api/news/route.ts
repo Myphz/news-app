@@ -10,20 +10,31 @@ export type Article = Partial<{
   date: string;
 }>;
 
+const getRSSUrl = (searchParams: URLSearchParams) => {
+  const params = Object.fromEntries(searchParams);
+
+  if (params.topic)
+    return `https://news.google.com/rss/headlines/section/topic/${encodeURIComponent(
+      params.topic
+    )}`;
+
+  if (params.query)
+    return `https://news.google.com/rss/search?q=${encodeURIComponent(
+      params.query
+    )}`;
+
+  return null;
+};
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(req.url);
-  const query = searchParams.get("query");
 
-  if (!query) {
+  const rssUrl = getRSSUrl(searchParams);
+  if (!rssUrl)
     return NextResponse.json(
-      { error: "Query parameter is required" },
+      { error: "Invalid query parameters" },
       { status: 400 }
     );
-  }
-
-  const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(
-    query
-  )}`;
 
   try {
     // Fetch and parse the RSS feed
@@ -37,7 +48,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(articles);
   } catch (error) {
-    console.error("Error fetching RSS feed:", error);
     return NextResponse.json(
       { error: "Failed to fetch news" },
       { status: 500 }
